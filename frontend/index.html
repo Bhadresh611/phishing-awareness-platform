@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - Phishing Awareness System</title>
+
+  <!-- Bootstrap / FontAwesome / Chart.js -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      background-color: #f4f6f9;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .sidebar {
+      min-height: 100vh;
+      width: 240px;
+      background: linear-gradient(180deg, #1f1f2e, #343a40);
+      color: #fff;
+      position: fixed;
+      left: 0;
+      top: 0;
+      padding: 20px 0;
+    }
+
+    .sidebar h3 {
+      font-weight: bold;
+    }
+
+    .sidebar a {
+      color: #bbb;
+      display: block;
+      padding: 12px 25px;
+      text-decoration: none;
+      border-radius: 8px;
+      margin: 5px 15px;
+      transition: 0.3s;
+    }
+
+    .sidebar a:hover,
+    .sidebar a.active {
+      background: #0d6efd;
+      color: #fff;
+    }
+
+    .content {
+      margin-left: 250px;
+      padding: 25px;
+      animation: fadeIn 0.6s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h2 {
+      font-weight: 600;
+      color: #2d2d2d;
+    }
+
+    .card {
+      border-radius: 14px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transition: transform 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+    }
+
+    .stat-icon {
+      font-size: 30px;
+      color: #0d6efd;
+    }
+
+    .stat-value {
+      font-size: 26px;
+      font-weight: 600;
+      margin-top: 8px;
+      color: #2d2d2d;
+    }
+
+    .stat-label {
+      color: #444;
+      font-size: 14px;
+    }
+
+    #dashboardChart {
+      max-height: 340px;
+    }
+
+    .table thead {
+      background: linear-gradient(135deg, #0d6efd, #6ea8fe);
+      color: #fff;
+    }
+
+    .table td,
+    .table th {
+      vertical-align: middle;
+    }
+
+    .table tbody tr:hover {
+      background-color: #f1f3f5;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h3 class="text-center mb-4"><i class="fa-solid fa-shield-halved"></i> Admin</h3>
+    <a href="index.html" class="active"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+    <a href="campaign.html"><i class="fa-solid fa-envelope"></i> Campaigns</a>
+    <a href="report.html"><i class="fa-solid fa-chart-pie"></i> Reports</a>
+    <!-- <a href="leaderboard.html"><i class="fa-solid fa-trophy"></i> Leaderboard</a> -->
+
+    <hr class="text-light opacity-25 my-3">
+    <div class="text-center mt-3">
+      <button id="sidebarAuthBtn" class="btn btn-sm btn-outline-light w-75">
+        <i class="fa-solid fa-right-to-bracket"></i> Login
+      </button>
+    </div>
+  </div>
+
+  <!-- 🔐 Login Modal -->
+  <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content p-3">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title"><i class="fa-solid fa-user-shield"></i> Admin Login</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input id="loginEmail" type="email" class="form-control mb-3" placeholder="Email" />
+          <input id="loginPassword" type="password" class="form-control mb-3" placeholder="Password" />
+          <button id="loginSubmit" class="btn btn-primary w-100">Login</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="content">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2>📊 Dashboard Overview</h2>
+      <p class="text-muted mb-0">Real-time insights from all campaigns</p>
+    </div>
+
+    <!-- Main 4 stats -->
+    <div class="row g-4 mb-4">
+      <div class="col-md-3 col-sm-6">
+        <div class="card p-3 text-center">
+          <i class="fa-solid fa-list-check stat-icon"></i>
+          <div id="totalCampaigns" class="stat-value">0</div>
+          <div class="stat-label">Total Campaigns</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="card p-3 text-center">
+          <i class="fa-solid fa-circle-play stat-icon text-success"></i>
+          <div id="activeCampaigns" class="stat-value">0</div>
+          <div class="stat-label">Active</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="card p-3 text-center">
+          <i class="fa-solid fa-file-pen stat-icon text-secondary"></i>
+          <div id="draftCampaigns" class="stat-value">0</div>
+          <div class="stat-label">Draft</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="card p-3 text-center">
+          <i class="fa-solid fa-check-circle stat-icon text-primary"></i>
+          <div id="completedCampaigns" class="stat-value">0</div>
+          <div class="stat-label">Completed</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top performer -->
+    <div class="card text-center p-4 mb-4" style="max-width: 500px; margin: 0 auto;">
+      <h5 class="fw-bold mb-1">🏆 Top Performer</h5>
+      <div id="topPerformer" class="fw-bold text-success fs-5">--</div>
+    </div>
+
+    <!-- Secondary stats -->
+    <div class="row g-4 mb-4">
+      <div class="col-md-3 col-sm-6">
+        <div class="card p-3 text-center">
+          <i class="fa-solid fa-paper-plane stat-icon text-info"></i>
+          <div id="totalSent" class="stat-value">0</div>
+          <div class="stat-label">Emails Sent</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="card p-3 text-center">
+          <i class="fa-solid fa-mouse-pointer stat-icon text-danger"></i>
+          <div id="totalClicked" class="stat-value">0</div>
+          <div class="stat-label">Clicked</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="card p-3 text-center">
+          <i class="fa-solid fa-flag stat-icon text-success"></i>
+          <div id="totalReported" class="stat-value">0</div>
+          <div class="stat-label">Reported</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="card p-3 text-center">
+          <i class="fa-solid fa-percentage stat-icon text-warning"></i>
+          <div id="avgSuccess" class="stat-value">0%</div>
+          <div class="stat-label">Success Rate</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Awareness -->
+    <div class="row g-4 mb-4">
+      <div class="col-md-6 col-sm-12">
+        <div class="card p-4 text-center">
+          <i class="fa-solid fa-mouse-pointer stat-icon text-danger"></i>
+          <div id="totalAwarenessClicks" class="stat-value">0</div>
+          <div class="stat-label">Total Clicks (Fell for Phish)</div>
+        </div>
+      </div>
+      <div class="col-md-6 col-sm-12 position-relative">
+        <div class="card p-4 text-center">
+          <i class="fa-solid fa-flag stat-icon text-success"></i>
+          <div id="totalAwarenessReports" class="stat-value">0</div>
+          <div class="stat-label">Total Reports (Caught It)</div>
+          <span id="awarenessRateBadge" class="badge bg-primary position-absolute top-0 end-0 m-3 p-2">0%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="card p-4 mb-4">
+      <h5 class="fw-bold mb-3">📈 Campaign Status & Engagement</h5>
+      <canvas id="dashboardChart"></canvas>
+    </div>
+
+    <!-- Recent campaigns -->
+    <div class="card p-4">
+      <h5 class="fw-bold mb-3"><i class="fa-solid fa-clock-rotate-left text-primary"></i> Recent Campaigns</h5>
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle text-center">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Campaign Name</th>
+              <th>Target Group</th>
+              <th>Status</th>
+              <th>Start Date</th>
+              <th>End Date</th>
+            </tr>
+          </thead>
+          <tbody id="recentCampaignsTable">
+            <tr>
+              <td colspan="6" class="text-muted">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    const API_BASE = `${location.protocol}//${location.hostname}:5000`;
+
+    // ✅ Check Login State (shared logic)
+    document.addEventListener("DOMContentLoaded", () => {
+      const token = localStorage.getItem("adminToken");
+      const sidebarAuthBtn = document.getElementById("sidebarAuthBtn");
+
+      if (!token) {
+        sidebarAuthBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Login';
+        sidebarAuthBtn.classList.replace("btn-outline-danger", "btn-outline-light");
+
+        // Open login modal automatically
+        const loginModalEl = document.getElementById("loginModal");
+        const loginModal = new bootstrap.Modal(loginModalEl);
+        setTimeout(() => loginModal.show(), 500);
+      } else {
+        sidebarAuthBtn.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i> Logout';
+        sidebarAuthBtn.classList.replace("btn-outline-light", "btn-outline-danger");
+      }
+    });
+
+    // ✅ Sidebar button (login/logout)
+    document.getElementById("sidebarAuthBtn").addEventListener("click", () => {
+      const token = localStorage.getItem("adminToken");
+      if (token) {
+        localStorage.removeItem("adminToken");
+        alert("🔓 Logged out successfully!");
+        location.reload();
+      } else {
+        const loginModal = new bootstrap.Modal(document.getElementById("loginModal"));
+        loginModal.show();
+      }
+    });
+
+    // ✅ Login submit
+    document.getElementById("loginSubmit").addEventListener("click", async () => {
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value.trim();
+
+      if (!email || !password) return alert("Please fill both fields!");
+
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.token) {
+          localStorage.setItem("adminToken", data.token);
+          alert("✅ Login successful!");
+          const modal = bootstrap.Modal.getInstance(document.getElementById("loginModal"));
+          modal.hide();
+          location.reload();
+        } else {
+          alert("❌ Invalid credentials!");
+        }
+      } catch (err) {
+        console.error("Login error:", err);
+        alert("Network error, please try again.");
+      }
+    });
+  </script>
+
+  <script>
+    // if (!localStorage.getItem('adminToken')) {
+    //   alert('⚠️ Please login first.');
+    //   window.location.href = 'login-admin.html';
+    // }
+    let allCampaigns = [], trackingLogs = [], dashboardChart;
+
+    document.addEventListener("DOMContentLoaded", loadDashboard);
+    setInterval(loadDashboard, 30000);
+
+    async function loadDashboard() {
+      try {
+        const token = localStorage.getItem('adminToken');
+        const headers = {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        };
+        const [campaignRes, trackingRes, scoreRes] = await Promise.all([
+          fetch(`${API_BASE}/api/campaigns`, { headers }),
+          fetch(`${API_BASE}/api/tracking`, { headers }),
+          fetch(`${API_BASE}/api/scores`)
+        ]);
+
+        allCampaigns = campaignRes.ok ? await campaignRes.json() : [];
+        trackingLogs = await trackingRes.ok ? await trackingRes.json() : [];
+        const scores = scoreRes.ok ? await scoreRes.json() : [];
+
+        document.getElementById('topPerformer').textContent =
+          scores?.length ? `${scores[0].userId} (${scores[0].level}, ${scores[0].totalScore} pts)` : '--';
+
+        updateStats(allCampaigns, trackingLogs);
+        renderChart(allCampaigns, trackingLogs);
+        renderRecentCampaigns(allCampaigns);
+      } catch (err) {
+        console.error("❌ Error loading dashboard:", err);
+      }
+    }
+
+    function updateStats(campaigns, logs) {
+      const total = campaigns.length;
+      const active = campaigns.filter(c => c.status === "Active").length;
+      const draft = campaigns.filter(c => c.status === "Draft").length;
+      const completed = campaigns.filter(c => c.status === "Completed").length;
+
+      const totalClicks = logs.filter(l => l.event === "clicked").length;
+      const totalSubmitted = logs.filter(l => l.event === "submitted").length;
+      const totalReports = logs.filter(l => l.event === "reported").length;
+
+      const denom = totalReports + totalClicks + totalSubmitted;
+      const awarenessRate = denom === 0 ? 0 : ((totalReports / denom) * 100).toFixed(1);
+
+      document.getElementById("totalCampaigns").textContent = total;
+      document.getElementById("activeCampaigns").textContent = active;
+      document.getElementById("draftCampaigns").textContent = draft;
+      document.getElementById("completedCampaigns").textContent = completed;
+
+      document.getElementById("totalSent").textContent = campaigns.reduce((a, c) => a + (c.sent || 0), 0);
+      document.getElementById("totalClicked").textContent = totalClicks;
+      document.getElementById("totalReported").textContent = totalReports;
+      document.getElementById("avgSuccess").textContent = `${awarenessRate}%`;
+      document.getElementById("totalAwarenessClicks").textContent = totalClicks;
+      document.getElementById("totalAwarenessReports").textContent = totalReports;
+      document.getElementById("awarenessRateBadge").textContent = `${awarenessRate}%`;
+    }
+
+    function renderChart(campaigns, logs) {
+      const ctx = document.getElementById("dashboardChart").getContext("2d");
+      const active = campaigns.filter(c => c.status === "Active").length;
+      const draft = campaigns.filter(c => c.status === "Draft").length;
+      const completed = campaigns.filter(c => c.status === "Completed").length;
+      const totalClicks = logs.filter(l => l.event === "clicked").length;
+      const totalSubmitted = logs.filter(l => l.event === "submitted").length;
+      const totalReports = logs.filter(l => l.event === "reported").length;
+
+      if (dashboardChart) dashboardChart.destroy();
+
+      dashboardChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: ["Active", "Draft", "Completed", "Clicked", "Submitted", "Reported"],
+          datasets: [{
+            label: "Counts",
+            data: [active, draft, completed, totalClicks, totalSubmitted, totalReports],
+            backgroundColor: ["#28a745", "#6c757d", "#0d6efd", "#dc3545", "#ffc107", "#198754"]
+          }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+      });
+    }
+
+    function renderRecentCampaigns(campaigns) {
+      const tbody = document.getElementById('recentCampaignsTable');
+      if (!campaigns?.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-muted">No campaigns yet</td></tr>`;
+        return;
+      }
+
+      const sorted = [...campaigns].sort((a, b) => new Date(b.startDate || 0) - new Date(a.startDate || 0)).slice(0, 5);
+      tbody.innerHTML = sorted.map((c, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td>${c.name || '-'}</td>
+          <td>${c.targetGroup || '-'}</td>
+          <td><span class="badge ${c.status === 'Completed' ? 'bg-primary' :
+          c.status === 'Draft' ? 'bg-secondary' : 'bg-success'
+        }">${c.status || 'Active'}</span></td>
+          <td>${c.startDate ? c.startDate.slice(0, 10) : '-'}</td>
+          <td>${c.endDate ? c.endDate.slice(0, 10) : '-'}</td>
+        </tr>`).join('');
+    }
+  </script>
+</body>
+
+</html>

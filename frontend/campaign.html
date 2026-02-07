@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campaigns - Phishing Awareness Dashboard</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- FontAwesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+
+  <style>
+    body {
+      background-color: #f4f6f9;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      min-height: 100vh;
+      width: 240px;
+      background: linear-gradient(180deg, #1f1f2e, #343a40);
+      color: #fff;
+      position: fixed;
+      left: 0;
+      top: 0;
+      padding: 20px 0;
+    }
+
+    .sidebar h3 {
+      font-weight: bold;
+    }
+
+    .sidebar a {
+      color: #bbb;
+      display: block;
+      padding: 12px 25px;
+      text-decoration: none;
+      border-radius: 8px;
+      margin: 5px 15px;
+      transition: 0.3s;
+    }
+
+    .sidebar a:hover,
+    .sidebar a.active {
+      background: #0d6efd;
+      color: #fff;
+    }
+
+    /* Content */
+    .content {
+      margin-left: 250px;
+      padding: 20px;
+    }
+
+    .card {
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transition: transform 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+    }
+
+    .table th {
+      background-color: #f1f3f5;
+    }
+
+    .btn-action {
+      border: none;
+      background: transparent;
+      color: #495057;
+      margin: 0 4px;
+      transition: 0.2s;
+    }
+
+    .btn-action:hover {
+      color: #0d6efd;
+    }
+
+    /* Modal Styling */
+    .modal-content {
+      border-radius: 16px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, #0d6efd, #6ea8fe);
+      color: #fff;
+      border-top-left-radius: 16px;
+      border-top-right-radius: 16px;
+    }
+
+    .form-control,
+    .form-select {
+      border-radius: 10px;
+    }
+
+    .btn-gradient {
+      background: linear-gradient(135deg, #0d6efd, #6ea8fe);
+      border: none;
+      color: #fff;
+      font-weight: 500;
+      border-radius: 10px;
+      transition: 0.3s;
+    }
+
+    .btn-gradient:hover {
+      background: linear-gradient(135deg, #0a58ca, #4689f6);
+    }
+
+    #statusChart {
+      max-height: 160px;
+      width: 100%;
+    }
+
+    #chartCard {
+      padding: 15px 20px;
+    }
+
+    .btn-action {
+      margin: 0 6px;
+    }
+
+    .btn-close-white {
+      filter: invert(1);
+    }
+
+    @media (max-width: 768px) {
+      .text-end {
+        text-align: left;
+        margin-top: 10px;
+      }
+
+      .d-flex.gap-2 {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h3 class="text-center mb-4"><i class="fa-solid fa-shield-halved"></i> Admin</h3>
+    <a href="index.html"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+    <a href="campaign.html" class="active"><i class="fa-solid fa-envelope"></i> Campaigns</a>
+    <a href="report.html"><i class="fa-solid fa-chart-pie"></i> Reports</a>
+    <!-- <a href="leaderboard.html"><i class="fa-solid fa-trophy"></i> Leaderboard</a> -->
+    <!--  <a href="#"><i class="fa-solid fa-users"></i> Users</a>
+    <a href="#"><i class="fa-solid fa-gear"></i> Settings</a> -->
+    <hr class="text-light opacity-25 my-3">
+    <div class="text-center mt-3">
+      <button id="sidebarAuthBtn" class="btn btn-sm btn-outline-light w-75">
+        <i class="fa-solid fa-right-to-bracket"></i> Login
+      </button>
+    </div>
+  </div>
+
+  <!-- 🔐 Login Modal -->
+  <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content p-3">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title"><i class="fa-solid fa-user-shield"></i> Admin Login</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input id="loginEmail" type="email" class="form-control mb-3" placeholder="Email" />
+          <input id="loginPassword" type="password" class="form-control mb-3" placeholder="Password" />
+          <button id="loginSubmit" class="btn btn-primary w-100">Login</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2>📧 Campaigns</h2>
+      <button class="btn btn-gradient" data-bs-toggle="modal" data-bs-target="#createCampaignModal">
+        <i class="fa-solid fa-plus"></i> Create Campaign
+      </button>
+    </div>
+
+    <!-- 🔍 Search & Filter Bar -->
+    <div class="row g-3 align-items-center">
+      <div class="col-md-4">
+        <input type="text" id="searchInput" class="form-control" placeholder="Search by campaign name...">
+      </div>
+      <div class="col-md-3">
+        <select id="filterGroup" class="form-select">
+          <option value="">All Target Groups</option>
+          <option value="Employees">Employees</option>
+          <option value="Managers">Managers</option>
+          <option value="IT Staff">IT Staff</option>
+          <option value="Custom Group">Custom Group</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <select id="filterStatus" class="form-select">
+          <option value="">All Status</option>
+          <option value="Active">Active</option>
+          <option value="Draft">Draft</option>
+          <option value="Completed">Completed</option>
+        </select>
+      </div>
+      <div class="col-md-2 text-end">
+        <button id="clearFilter" class="btn btn-outline-secondary">Clear</button>
+      </div>
+    </div>
+
+    <!-- 📊 Status Analytics Card -->
+    <div class="card mb-3" id="chartCard">
+      <div class="d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-bold">📊Campaign Status Overview</h6>
+        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#chartCollapse">
+          Show/Hide
+        </button>
+      </div>
+      <div id="chartCollapse" class="collapse show">
+        <div class="card-body">
+          <canvas id="statusChart" height="120"></canvas>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Campaigns Table -->
+    <div class="card p-3">
+      <h5 class="mb-3">All Campaigns</h5>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Campaign Name</th>
+              <th>Status</th>
+              <th>Emails Sent</th>
+              <th>Clicked</th>
+              <th>Submitted</th>
+              <th>Ignored</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>Awareness Training - Batch A</td>
+              <td><span class="badge bg-success">Active</span></td>
+              <td>200</td>
+              <td>50</td>
+              <td>15</td>
+              <td>135</td>
+              <td>
+                <button class="btn-action" title="View" data-bs-toggle="modal" data-bs-target="#viewCampaignModal"><i
+                    class="fa-solid fa-eye"></i></button>
+                <button class="btn-action" title="Edit" data-bs-toggle="modal" data-bs-target="#editCampaignModal"><i
+                    class="fa-solid fa-pen"></i></button>
+                <button class="btn-action" title="Delete"><i class="fa-solid fa-trash"></i></button>
+              </td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>Monthly Awareness Drive</td>
+              <td><span class="badge bg-secondary">Draft</span></td>
+              <td>--</td>
+              <td>--</td>
+              <td>--</td>
+              <td>--</td>
+              <td>
+                <button class="btn-action" title="View" data-bs-toggle="modal" data-bs-target="#viewCampaignModal"><i
+                    class="fa-solid fa-eye"></i></button>
+                <button class="btn-action" title="Edit" data-bs-toggle="modal" data-bs-target="#editCampaignModal"><i
+                    class="fa-solid fa-pen"></i></button>
+                <button class="btn-action" title="Delete"><i class="fa-solid fa-trash"></i></button>
+              </td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>Phishing Simulation - Q1</td>
+              <td><span class="badge bg-primary">Completed</span></td>
+              <td>350</td>
+              <td>120</td>
+              <td>40</td>
+              <td>190</td>
+              <td>
+                <button class="btn-action" title="View" data-bs-toggle="modal" data-bs-target="#viewCampaignModal"><i
+                    class="fa-solid fa-eye"></i></button>
+                <button class="btn-action" title="Edit" data-bs-toggle="modal" data-bs-target="#editCampaignModal"><i
+                    class="fa-solid fa-pen"></i></button>
+                <button class="btn-action" title="Delete"><i class="fa-solid fa-trash"></i></button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 🎯 Send Simulation Email Section -->
+    <div class="card p-4 mt-4">
+      <h5 class="mb-3"><i class="fa-solid fa-paper-plane text-primary"></i> Send Simulation Emails</h5>
+      <p class="text-muted small mb-3">
+        Enter comma-separated email addresses below to send phishing-awareness test mails.
+        Each will receive a “Verify Account” and “Report Suspicious Email” link for awareness tracking.
+      </p>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Select Campaign</label>
+        <select id="campaignSelect" class="form-select">
+          <option value="">-- Loading campaigns... --</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Recipient Emails</label>
+        <textarea id="recipientEmails" class="form-control" rows="3"
+          placeholder="e.g. alice@gmail.com, bob@gmail.com, carol@company.com"></textarea>
+      </div>
+
+      <div class="d-flex gap-2 align-items-center">
+        <button id="sendSimulation" class="btn btn-gradient">
+          <i class="fa-solid fa-paper-plane"></i> Send Simulation
+        </button>
+        <button id="clearEmails" class="btn btn-outline-secondary">Clear</button>
+
+        <!-- Progress bar -->
+        <div class="flex-grow-1 ms-3" id="progressContainer" style="display:none;">
+          <div class="progress" style="height: 20px;">
+            <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+              role="progressbar" style="width: 0%">0%</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="sendStatus" class="text-muted small mt-2"></div>
+    </div>
+
+    <!-- Create Campaign Modal -->
+    <div class="modal fade" id="createCampaignModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="fa-solid fa-plus"></i> Create New Campaign</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="createCampaignForm">
+              <div class="mb-3">
+                <label class="form-label">Campaign Name</label>
+                <input type="text" class="form-control" id="campaignName" placeholder="Enter campaign name">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Target Group</label>
+                <select class="form-select" id="targetGroup">
+                  <option>-- Select Group --</option>
+                  <option>Employees</option>
+                  <option>Managers</option>
+                  <option>IT Staff</option>
+                  <option>Custom Group</option>
+                </select>
+              </div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">Start Date</label>
+                  <input type="date" class="form-control" id="startDate">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">End Date</label>
+                  <input type="date" class="form-control" id="endDate">
+                </div>
+              </div>
+              <div class="mb-3 mt-3">
+                <label class="form-label">Status</label>
+                <select class="form-select" id="campaignStatus">
+                  <option value="Active">Active</option>
+                  <option value="Draft">Draft</option>
+                  <option value="Completed">Completed</option>
+                </select>
+              </div>
+              <div class="mb-3 mt-3">
+                <label class="form-label">Email Template</label>
+                <textarea class="form-control" rows="4" id="emailTemplate"
+                  placeholder="Write your phishing awareness email..."></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button class="btn btn-gradient" id="submitCampaign">Create Campaign</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Campaign Modal -->
+    <div class="modal fade" id="editCampaignModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="fa-solid fa-pen"></i> Edit Campaign</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="editCampaignForm">
+              <input type="hidden" id="editId">
+              <div class="mb-3">
+                <label class="form-label">Campaign Name</label>
+                <input type="text" class="form-control" id="editName">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Target Group</label>
+                <select class="form-select" id="editGroup">
+                  <option selected>Employees</option>
+                  <option>Managers</option>
+                  <option>IT Staff</option>
+                  <option>Custom Group</option>
+                </select>
+              </div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">Start Date</label>
+                  <input type="date" class="form-control" id="editStart">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">End Date</label>
+                  <input type="date" class="form-control" id="editEnd">
+                </div>
+              </div>
+              <div class="mb-3 mt-3">
+                <label class="form-label">Status</label>
+                <select class="form-select" id="editStatus">
+                  <option value="Active">Active</option>
+                  <option value="Draft">Draft</option>
+                  <option value="Completed">Completed</option>
+                </select>
+              </div>
+              <div class="mb-3 mt-3">
+                <label class="form-label">Email Template</label>
+                <textarea class="form-control" rows="4" id="editTemplate"></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button class="btn btn-gradient" id="saveEdit">Save Changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- View Campaign Modal -->
+    <div class="modal fade" id="viewCampaignModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="fa-solid fa-eye"></i> Campaign Details</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <h5 id="viewName" class="mb-3 fw-bold"></h5>
+            <p><strong>Status:</strong> <span id="viewStatus" class="badge"></span></p>
+            <p><strong>Duration:</strong> <span id="viewDuration"></span></p>
+            <hr>
+            <h6>📊 Results</h6>
+            <ul>
+              <li><strong>Emails Sent:</strong> <span id="viewSent"></span></li>
+              <li><strong>Clicked:</strong> <span id="viewClicked"></span></li>
+              <li><strong>Submitted:</strong> <span id="viewSubmitted"></span></li>
+              <li><strong>Ignored:</strong> <span id="viewIgnored"></span> </li>
+            </ul>
+            <hr>
+            <h6>✉️ Email Template Preview</h6>
+            <div class="p-3 border rounded bg-light">
+              <p id="viewEmailTemplate"></p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-gradient" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+      const API_BASE = `${location.protocol}//${location.hostname}:5000`;
+      
+      // ✅ Login check (redirect if not logged in)
+    document.addEventListener("DOMContentLoaded", () => {
+      const token = localStorage.getItem("adminToken");
+      const sidebarAuthBtn = document.getElementById("sidebarAuthBtn");
+
+      if (!token) {
+        alert("⚠️ Please login first.");
+        window.location.href = "index.html"; // redirect to login
+        return;
+      }
+
+      sidebarAuthBtn.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i> Logout';
+      sidebarAuthBtn.classList.replace("btn-outline-light", "btn-outline-danger");
+      loadCampaigns(token);
+    });
+
+    // ✅ Sidebar login/logout button
+    document.getElementById("sidebarAuthBtn").addEventListener("click", () => {
+      const token = localStorage.getItem("adminToken");
+      if (token) {
+        localStorage.removeItem("adminToken");
+        alert("🔓 Logged out successfully!");
+        window.location.href = "index.html";
+      } else {
+        const loginModal = new bootstrap.Modal(document.getElementById("loginModal"));
+        loginModal.show();
+      }
+    });
+    </script>
+
+    <script>
+      console.log("✅ Campaign page initialized:", API_BASE);
+      // if (!localStorage.getItem('adminToken')) {
+      //   alert('⚠️ Please login first.');
+      //   window.location.href = 'login-admin.html';
+      // }
+      let allCampaigns = []; // store full data
+
+      function renderCampaigns(data) {
+        const tbody = document.querySelector('table tbody');
+        tbody.innerHTML = '';
+
+        if (data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">No campaigns found</td></tr>`;
+          return;
+        }
+
+        data.forEach((c, index) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+        <td>${index + 1}</td>
+        <td>${c.name}</td>
+        <td>
+  <span class="badge ${c.status === 'Completed' ? 'bg-primary' :
+              c.status === 'Draft' ? 'bg-secondary' : 'bg-success'
+            }">${c.status || 'Active'}</span>
+</td>
+        <td>${c.sent || '--'}</td>
+        <td>${c.clicked || '--'}</td>
+        <td>${c.submitted || '--'}</td>
+        <td>${c.ignored || '--'}</td>
+        <td>
+          <button class="btn-action text-info view-btn" data-id="${c._id}" title="View"><i class="fa-solid fa-eye"></i></button>
+          <button class="btn-action text-primary edit-btn" data-id="${c._id}" title="Edit"><i class="fa-solid fa-pen"></i></button>
+          <button class="btn-action text-danger delete-btn" data-id="${c._id}" title="Delete"><i class="fa-solid fa-trash"></i></button>
+        </td>
+      `;
+          tbody.appendChild(tr);
+        });
+
+        // Re-bind edit and delete buttons after rendering
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const id = e.currentTarget.getAttribute('data-id');
+            if (confirm('🗑️ Delete this campaign?')) {
+              const del = await fetch(`${API_BASE}/api/campaigns/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('adminToken') }
+              });
+              if (del.ok) alert('✅ Campaign Deleted successfully!');
+              else alert('❌ Failed to delete campaign.');
+              await loadCampaigns();
+              updateStatusChart(allCampaigns);
+            }
+          });
+        });
+
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => openEditModal(e.currentTarget.getAttribute('data-id')));
+        });
+
+        document.querySelectorAll('.view-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => openViewModal(e.currentTarget.getAttribute('data-id')));
+        });
+      }
+
+
+
+      // === Search and Filter Logic ===
+      document.getElementById('searchInput').addEventListener('input', filterCampaigns);
+      document.getElementById('filterGroup').addEventListener('change', filterCampaigns);
+      document.getElementById('filterStatus').addEventListener('change', filterCampaigns);
+      document.getElementById('clearFilter').addEventListener('click', () => {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('filterGroup').value = '';
+        document.getElementById('filterStatus').value = '';
+        renderCampaigns(allCampaigns);
+        updateStatusChart(allCampaigns);
+      });
+
+      function filterCampaigns() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const group = document.getElementById('filterGroup').value;
+        const status = document.getElementById('filterStatus').value;
+
+        const filtered = allCampaigns.filter(c => {
+          const matchesName = c.name.toLowerCase().includes(searchTerm);
+          const matchesGroup = group === '' || c.targetGroup === group;
+          const matchesStatus = status === '' || c.status === status;
+          return matchesName && matchesGroup && matchesStatus;
+        });
+        renderCampaigns(filtered);
+        updateStatusChart(filtered);
+      }
+
+    </script>
+
+    <script>
+      // === Handle Create Campaign ===
+      document.getElementById('submitCampaign').addEventListener('click', async function () {
+        // Read form values
+        const campaign = {
+          name: document.getElementById('campaignName').value.trim(),
+          targetGroup: document.getElementById('targetGroup').value,
+          startDate: document.getElementById('startDate').value,
+          endDate: document.getElementById('endDate').value,
+          emailTemplate: document.getElementById('emailTemplate').value.trim(),
+          status: document.getElementById('campaignStatus').value
+        };
+
+        // Simple validation
+        if (!campaign.name || !campaign.startDate || !campaign.endDate) {
+          alert('Please fill in all required fields.');
+          return;
+        }
+
+        // Send to backend
+        try {
+          const res = await fetch(`${API_BASE}/api/campaigns`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + localStorage.getItem('adminToken')
+            },
+            body: JSON.stringify(campaign)
+          });
+
+          const data = await res.json();
+          if (res.ok) {
+            alert('✅ Campaign created successfully!');
+            document.getElementById('createCampaignForm').reset();
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('createCampaignModal'));
+            modal.hide();
+            // Reload table
+            await loadCampaigns();
+            updateStatusChart(allCampaigns);
+          } else {
+            alert('❌ Error: ' + (data.error || 'Something went wrong.'));
+          }
+        } catch (err) {
+          alert('❌ Network error, check your backend.');
+          console.error(err);
+        }
+      });
+    </script>
+
+    <script>
+      // --- Open edit modal and fill fields ---
+      async function openEditModal(id) {
+        try {
+          const res = await fetch(`${API_BASE}/api/campaigns/${id}`);
+          const campaign = await res.json();
+
+          document.getElementById('editId').value = campaign._id;
+          document.getElementById('editName').value = campaign.name;
+          document.getElementById('editGroup').value = campaign.targetGroup || '';
+          document.getElementById('editStart').value = campaign.startDate ? campaign.startDate.slice(0, 10) : '';
+          document.getElementById('editEnd').value = campaign.endDate ? campaign.endDate.slice(0, 10) : '';
+          document.getElementById('editTemplate').value = campaign.emailTemplate || '';
+          document.getElementById('editStatus').value = campaign.status || 'Active';
+
+          const modal = new bootstrap.Modal(document.getElementById('editCampaignModal'));
+          modal.show();
+        } catch (err) {
+          console.error('❌ Error loading campaign for edit:', err);
+        }
+      }
+
+      // --- Save changes ---
+      document.getElementById('saveEdit').addEventListener('click', async () => {
+        const id = document.getElementById('editId').value;
+        const updated = {
+          name: document.getElementById('editName').value.trim(),
+          targetGroup: document.getElementById('editGroup').value,
+          startDate: document.getElementById('editStart').value,
+          endDate: document.getElementById('editEnd').value,
+          emailTemplate: document.getElementById('editTemplate').value.trim(),
+          status: document.getElementById('editStatus').value
+        };
+
+        try {
+          const res = await fetch(`${API_BASE}/api/campaigns/${id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + localStorage.getItem('adminToken')
+            },
+            body: JSON.stringify(updated)
+          });
+          if (!res.ok) throw new Error('Update failed');
+          alert('✅ Campaign updated successfully!');
+          const modal = bootstrap.Modal.getInstance(document.getElementById('editCampaignModal'));
+          modal.hide();
+          await loadCampaigns();
+          updateStatusChart(allCampaigns);
+        } catch (err) {
+          console.error('❌ Update error:', err);
+          alert('❌ Could not update campaign.');
+        }
+      });
+    </script>
+
+    <script>
+      // === View Campaign Details ===
+      async function openViewModal(id) {
+        try {
+          const res = await fetch(`${API_BASE}/api/campaigns/${id}`);
+          const campaign = await res.json();
+
+          // Fill modal fields
+          document.getElementById('viewName').textContent = campaign.name;
+          document.getElementById('viewStatus').textContent = campaign.status || 'Active';
+
+          const statusBadge = document.getElementById('viewStatus');
+          statusBadge.className = 'badge ' + (
+            campaign.status === 'Completed' ? 'bg-primary' :
+              campaign.status === 'Draft' ? 'bg-secondary' : 'bg-success'
+          );
+
+          document.getElementById('viewDuration').textContent =
+            (campaign.startDate ? campaign.startDate.slice(0, 10) : 'N/A') +
+            ' → ' +
+            (campaign.endDate ? campaign.endDate.slice(0, 10) : 'N/A');
+
+          document.getElementById('viewSent').textContent = campaign.sent || 0;
+          document.getElementById('viewClicked').textContent = campaign.clicked || 0;
+          document.getElementById('viewSubmitted').textContent = campaign.submitted || 0;
+          document.getElementById('viewIgnored').textContent = campaign.ignored || 0;
+
+          document.getElementById('viewEmailTemplate').textContent =
+            campaign.emailTemplate || 'No template provided.';
+
+          // Show modal
+          const modal = new bootstrap.Modal(document.getElementById('viewCampaignModal'));
+          modal.show();
+        } catch (err) {
+          console.error('❌ Error loading campaign for view:', err);
+        }
+      }
+    </script>
+
+    <script>
+      let statusChart; // global chart reference
+
+      // --- Update Chart when campaigns load ---
+      function updateStatusChart(data) {
+        const ctx = document.getElementById('statusChart').getContext('2d');
+
+        const active = data.filter(c => c.status === 'Active').length;
+        const draft = data.filter(c => c.status === 'Draft').length;
+        const completed = data.filter(c => c.status === 'Completed').length;
+
+        const total = active + draft + completed;
+
+        const chartData = {
+          labels: ['Active', 'Draft', 'Completed'],
+          datasets: [{
+            label: 'Campaigns',
+            data: [active, draft, completed],
+            backgroundColor: ['#28a745', '#6c757d', '#0d6efd'],
+            hoverOffset: 10
+          }]
+        };
+
+        const chartOptions = {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  const value = context.parsed;
+                  const percent = total ? ((value / total) * 100).toFixed(1) : 0;
+                  return `${context.label}: ${value} (${percent}%)`;
+                }
+              }
+            }
+          }
+        };
+
+        // If chart already exists, destroy it before re-rendering
+        if (statusChart) {
+          statusChart.destroy();
+        }
+
+        statusChart = new Chart(ctx, {
+          type: 'doughnut',
+          data: chartData,
+          options: {
+            responsive: true,
+            animation: { duration: 600 },
+            plugins: { legend: { position: 'bottom' } }
+          }
+        });
+      }
+
+      // ✅ Hook into loadCampaigns to update chart after data fetch
+      async function loadCampaigns() {
+        try {
+          const res = await fetch(`${API_BASE}/api/campaigns`);
+          allCampaigns = await res.json();
+          renderCampaigns(allCampaigns);
+          updateStatusChart(allCampaigns); // 🎯 update chart here
+        } catch (err) {
+          console.error('❌ Error loading campaigns:', err);
+        }
+      }
+      document.addEventListener('DOMContentLoaded', loadCampaigns);
+
+    </script>
+
+    <script>
+
+      // === Load Campaigns into Dropdown ===
+      async function loadCampaignsDropdown() {
+        const select = document.getElementById("campaignSelect");
+        try {
+          const res = await fetch(`${API_BASE}/api/campaigns`);
+          const campaigns = await res.json();
+
+          select.innerHTML = '<option value="">-- Select Campaign --</option>';
+          campaigns.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c._id;
+            opt.textContent = `${c.name} (${c.status})`;
+            select.appendChild(opt);
+          });
+
+          if (campaigns.length === 0)
+            select.innerHTML = '<option value="">No campaigns found</option>';
+        } catch (err) {
+          console.error("❌ Error loading campaigns:", err);
+          select.innerHTML = '<option value="">⚠️ Failed to load campaigns</option>';
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", loadCampaignsDropdown);
+
+      // === Clear Emails ===
+      document.getElementById("clearEmails").addEventListener("click", () => {
+        document.getElementById("recipientEmails").value = "";
+      });
+
+      // === Send Simulation with Progress Bar ===
+      document.getElementById("sendSimulation").addEventListener("click", async () => {
+        const raw = document.getElementById("recipientEmails").value.trim();
+        const campaignId = document.getElementById("campaignSelect").value;
+        const progressContainer = document.getElementById("progressContainer");
+        const progressBar = document.getElementById("progressBar");
+        const sendStatus = document.getElementById("sendStatus");
+
+        if (!campaignId) return alert("Please select a campaign.");
+        if (!raw) return alert("Please enter at least one email address.");
+
+        const recipients = raw.split(",").map(e => e.trim()).filter(Boolean);
+
+        // show progress bar
+        progressContainer.style.display = "block";
+        progressBar.style.width = "0%";
+        progressBar.textContent = "0%";
+        sendStatus.textContent = "Sending simulation emails...";
+
+        let sentCount = 0;
+        const total = recipients.length;
+
+        try {
+          for (const email of recipients) {
+            const payload = { campaignId, recipients: [email] };
+            const res = await fetch(`${API_BASE}/api/send-email`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                'Authorization': 'Bearer ' + localStorage.getItem('adminToken')
+              },
+              body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) console.warn("⚠️ Failed for", email);
+            sentCount++;
+
+            const percent = Math.round((sentCount / total) * 100);
+            progressBar.style.width = percent + "%";
+            progressBar.textContent = percent + "%";
+          }
+
+          progressBar.classList.remove("bg-success");
+          progressBar.classList.add("bg-info");
+          sendStatus.textContent = `✅ Completed! ${sentCount} / ${total} emails sent.`;
+
+          // Optional: reset after a few seconds
+          setTimeout(() => {
+            progressContainer.style.display = "none";
+            sendStatus.textContent = "";
+          }, 4000);
+
+        } catch (err) {
+          console.error("❌ Error sending emails:", err);
+          alert("Network error while sending emails.");
+        }
+      });
+    </script>
+
+</body>
+
+</html>

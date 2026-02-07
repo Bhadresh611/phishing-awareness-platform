@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reports - Phishing Awareness Platform</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      background-color: #f4f6f9;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .sidebar {
+      min-height: 100vh;
+      width: 240px;
+      background: linear-gradient(180deg, #1f1f2e, #343a40);
+      color: #fff;
+      position: fixed;
+      left: 0;
+      top: 0;
+      padding: 20px 0;
+    }
+
+    .sidebar h3 {
+      font-weight: bold;
+    }
+
+    .sidebar a {
+      color: #bbb;
+      display: block;
+      padding: 12px 25px;
+      text-decoration: none;
+      border-radius: 8px;
+      margin: 5px 15px;
+      transition: 0.3s;
+    }
+
+    .sidebar a:hover,
+    .sidebar a.active {
+      background: #0d6efd;
+      color: #fff;
+    }
+
+    .content {
+      margin-left: 250px;
+      padding: 30px;
+    }
+
+    .card {
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      margin-bottom: 25px;
+      transition: transform 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+    }
+
+    .table thead {
+      background: linear-gradient(135deg, #0d6efd, #6ea8fe);
+      color: white;
+    }
+
+    .table tbody tr:hover {
+      background-color: #f1f3f5;
+    }
+
+    h2 i {
+      color: #0d6efd;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar d-flex flex-column">
+    <h3 class="text-center text-light mb-4"><i class="fa-solid fa-shield-halved"></i> Admin</h3>
+    <a href="index.html"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+    <a href="campaign.html"><i class="fa-solid fa-envelope"></i> Campaigns</a>
+    <a href="report.html" class="active"><i class="fa-solid fa-chart-pie"></i> Reports</a>
+    <!-- <a href="leaderboard.html"><i class="fa-solid fa-trophy"></i> Leaderboard</a> -->
+
+    <hr class="text-light opacity-25 my-3">
+    <div class="text-center mt-3">
+      <button id="sidebarAuthBtn" class="btn btn-sm btn-outline-light w-75">
+        <i class="fa-solid fa-right-to-bracket"></i> Login
+      </button>
+    </div>
+  </div>
+
+  <!-- 🔐 Login Modal -->
+  <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content p-3">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title"><i class="fa-solid fa-user-shield"></i> Admin Login</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input id="loginEmail" type="email" class="form-control mb-3" placeholder="Email" />
+          <input id="loginPassword" type="password" class="form-control mb-3" placeholder="Password" />
+          <button id="loginSubmit" class="btn btn-primary w-100">Login</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+    <h2 class="mb-4"><i class="fa-solid fa-chart-pie"></i> Reports & Analytics</h2>
+
+    <!-- Summary Cards -->
+    <div class="row g-4 mb-4" id="summaryCards">
+      <div class="col-md-3 col-sm-6">
+        <div class="card p-3 text-center">
+          <i class="fa-solid fa-mouse-pointer fa-2x text-danger mb-2"></i>
+          <h5>Total Clicks</h5>
+          <h3 id="totalClicks">0</h3>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="card p-3 text-center">
+          <i class="fa-solid fa-flag fa-2x text-success mb-2"></i>
+          <h5>Total Reports</h5>
+          <h3 id="totalReports">0</h3>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="card p-3 text-center">
+          <i class="fa-solid fa-file-circle-check fa-2x text-warning mb-2"></i>
+          <h5>Total Submitted</h5>
+          <h3 id="totalSubmitted">0</h3>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="card p-3 text-center">
+          <i class="fa-solid fa-percentage fa-2x text-primary mb-2"></i>
+          <h5>Awareness Rate</h5>
+          <h3 id="awarenessRate">0%</h3>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart 1 -->
+    <div class="card p-4">
+      <h5><i class="fa-solid fa-line-chart text-primary"></i> Success Rate by Campaign</h5>
+      <canvas id="successRateChart" height="100"></canvas>
+    </div>
+
+    <!-- Chart 2 -->
+    <div class="card p-4">
+      <h5><i class="fa-solid fa-chart-line text-success"></i> Campaigns Created Over Time</h5>
+      <canvas id="growthChart" height="100"></canvas>
+    </div>
+
+    <!-- Table -->
+    <div class="card p-4">
+      <h5 class="mb-3"><i class="fa-solid fa-table text-secondary"></i> Campaign Performance Details</h5>
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle text-center" id="reportTable">
+          <thead>
+            <tr>
+              <th>Campaign Name</th>
+              <th>Status</th>
+              <th>Clicks</th>
+              <th>Reports</th>
+              <th>Submitted</th>
+              <th>Success Rate</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    const API_BASE = `${location.protocol}//${location.hostname}:5000`;
+    
+    // ✅ Login Check (redirect if not logged in)
+    document.addEventListener("DOMContentLoaded", () => {
+      const token = localStorage.getItem("adminToken");
+      const sidebarAuthBtn = document.getElementById("sidebarAuthBtn");
+
+      if (!token) {
+        alert("⚠️ Please login first.");
+        window.location.href = "index.html";
+        return;
+      }
+
+      sidebarAuthBtn.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i> Logout';
+      sidebarAuthBtn.classList.replace("btn-outline-light", "btn-outline-danger");
+      loadReports(token);
+    });
+
+    // ✅ Sidebar Login/Logout Button
+    document.getElementById("sidebarAuthBtn").addEventListener("click", () => {
+      const token = localStorage.getItem("adminToken");
+      if (token) {
+        localStorage.removeItem("adminToken");
+        alert("🔓 Logged out successfully!");
+        window.location.href = "index.html";
+      } else {
+        const loginModal = new bootstrap.Modal(document.getElementById("loginModal"));
+        loginModal.show();
+      }
+    });
+  </script>
+
+  <script>
+    let campaigns = [];
+    let tracking = [];
+    let successRateChart, growthChart;
+
+    document.addEventListener("DOMContentLoaded", loadReports);
+    setInterval(loadReports, 60000);
+
+    async function loadReports() {
+      try {
+        const token = localStorage.getItem('adminToken');
+        // if (!token) {
+        //   alert('⚠️ Please login first.');
+        //   window.location.href = 'login-admin.html';
+        //   return;
+        // }
+
+        const headers = { 'Authorization': 'Bearer ' + token };
+
+        const [cRes, tRes] = await Promise.all([
+          fetch(`${API_BASE}/api/campaigns`, { headers }),
+          fetch(`${API_BASE}/api/tracking`, { headers })
+        ]);
+        campaigns = await cRes.json();
+        tracking = await tRes.json();
+
+        updateSummary();
+        renderSuccessChart();
+        renderGrowthChart();
+        renderTable();
+      } catch (err) {
+        console.error("❌ Error loading reports:", err);
+      }
+    }
+
+    function getTrackingCampaignId(t) {
+      if (!t || !t.campaignId) return null;
+      if (typeof t.campaignId === 'string') return t.campaignId;
+      if (typeof t.campaignId === 'object' && t.campaignId._id) return t.campaignId._id;
+      return null;
+    }
+
+    function updateSummary() {
+      const clicks = tracking.filter(x => x.event === 'clicked').length;
+      const reports = tracking.filter(x => x.event === 'reported').length;
+      const submitted = tracking.filter(x => x.event === 'submitted').length;
+
+      const denom = clicks + reports + submitted;
+      const awarenessRate = denom === 0 ? 0 : ((reports / denom) * 100).toFixed(1);
+
+      document.getElementById("totalClicks").textContent = clicks;
+      document.getElementById("totalReports").textContent = reports;
+      document.getElementById("totalSubmitted").textContent = submitted;
+      document.getElementById("awarenessRate").textContent = `${awarenessRate}%`;
+    }
+
+    function perCampaignStats() {
+      return campaigns.map(c => {
+        const cid = c._id;
+        const click = tracking.filter(t => getTrackingCampaignId(t) === cid && t.event === 'clicked').length;
+        const report = tracking.filter(t => getTrackingCampaignId(t) === cid && t.event === 'reported').length;
+        const submit = tracking.filter(t => getTrackingCampaignId(t) === cid && t.event === 'submitted').length;
+        const denom = click + report + submit;
+        const rate = denom === 0 ? 0 : ((report / denom) * 100);
+        return { name: c.name, status: c.status || 'Active', clicks: click, reports: report, submitted: submit, rate, startDate: c.startDate || null };
+      });
+    }
+
+    function renderSuccessChart() {
+      const ctx = document.getElementById("successRateChart").getContext("2d");
+      const stats = perCampaignStats();
+
+      const labels = stats.map(s => s.name);
+      const data = stats.map(s => +s.rate.toFixed(1));
+
+      if (successRateChart) successRateChart.destroy();
+
+      successRateChart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{
+            label: "Success Rate (%)",
+            data,
+            borderColor: "#0d6efd",
+            fill: false,
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: "bottom" } },
+          scales: { y: { beginAtZero: true, max: 100 } }
+        }
+      });
+    }
+
+    function renderGrowthChart() {
+      const ctx = document.getElementById("growthChart").getContext("2d");
+
+      // Group campaigns by startDate (YYYY-MM-DD)
+      const dateMap = {};
+      campaigns.forEach(c => {
+        const key = c.startDate ? c.startDate.toString().slice(0, 10) : 'N/A';
+        dateMap[key] = (dateMap[key] || 0) + 1;
+      });
+
+      const labels = Object.keys(dateMap).sort((a, b) => new Date(a) - new Date(b));
+      const values = labels.map(l => dateMap[l]);
+
+      if (growthChart) growthChart.destroy();
+
+      growthChart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{
+            label: "Campaigns Created",
+            data: values,
+            borderColor: "#198754",
+            fill: false,
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: "bottom" } },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    function renderTable() {
+      const tbody = document.querySelector("#reportTable tbody");
+      const stats = perCampaignStats();
+
+      if (!stats.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-muted">No campaigns yet</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = stats.map(s => `
+        <tr>
+          <td>${s.name}</td>
+          <td>${s.status}</td>
+          <td class="text-danger fw-bold">${s.clicks}</td>
+          <td class="text-success fw-bold">${s.reports}</td>
+          <td class="text-warning fw-bold">${s.submitted}</td>
+          <td><span class="badge bg-primary">${s.rate.toFixed(1)}%</span></td>
+        </tr>
+      `).join('');
+    }
+  </script>
+</body>
+
+</html>

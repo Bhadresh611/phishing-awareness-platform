@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Great Job - You Reported the Phish!</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #2e7d32;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .card {
+      max-width: 650px;
+      border-radius: 18px;
+      box-shadow: 0 6px 18px rgba(67, 160, 71, 0.25);
+      background: white;
+      padding: 30px;
+      text-align: center;
+      animation: fadeIn 0.6s ease-in-out;
+    }
+
+@media (max-width: 576px) {
+      .card{
+        padding: 20px;
+      }
+      .icon{
+        font-size: 45px;
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .icon {
+      font-size: 60px;
+      color: #43a047;
+      margin-bottom: 15px;
+    }
+
+    .tip {
+      background: #f1f8e9;
+      border-left: 5px solid #66bb6a;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+    }
+
+    .btn-home {
+      background: linear-gradient(135deg, #43a047, #66bb6a);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-weight: 500;
+    }
+
+    .btn-home:hover {
+      background: linear-gradient(135deg, #2e7d32, #43a047);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <i class="fa-solid fa-circle-check icon"></i>
+    <h2 class="fw-bold">Excellent Work!</h2>
+    <p class="mb-4">You correctly identified a phishing attempt and reported it.  
+      That’s exactly how you help keep your organization safe. 🔒</p>
+
+    <h5 class="fw-bold text-start">Keep These Best Practices in Mind 👇</h5>
+
+    <div class="tip"><strong>📧 Double-check the sender’s address</strong> — Phishers often mimic trusted domains.</div>
+    <div class="tip"><strong>⚠️ Be skeptical of urgency</strong> — “Immediate action required!” emails are red flags.</div>
+    <div class="tip"><strong>🚫 Don’t click unknown links</strong> — Always verify before you interact.</div>
+    <div class="tip"><strong>🧠 Stay alert</strong> — You’re building strong security habits!</div>
+
+    <hr class="my-4">
+    <p class="text-muted">Thank you for being part of our cybersecurity culture 💚</p>
+    <a href="leaderboard.html" class="btn btn-home"><i class="fa-solid fa-house"></i> See How You Rank - View Leaderboard</a>
+  </div>
+</body>
+</html>

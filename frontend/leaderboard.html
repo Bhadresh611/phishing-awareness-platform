@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Awareness Leaderboard</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #f4f6f9, #e8f0fe);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 40px 20px;
+    }
+
+    .content {
+      max-width: 1000px;
+      margin: auto;
+      animation: fadeIn 0.6s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      border-radius: 14px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      margin-bottom: 25px;
+    }
+
+    h2 {
+      text-align: center;
+      font-weight: 700;
+      color: #0d6efd;
+      margin-bottom: 30px;
+    }
+
+    table thead {
+      background: linear-gradient(135deg, #0d6efd, #6ea8fe);
+      color: white;
+    }
+
+    .badge-level {
+      font-size: 0.85rem;
+      padding: 6px 10px;
+      border-radius: 8px;
+    }
+
+    .chart-container {
+      height: 280px;
+    }
+
+    .btn-admin {
+      display: block;
+      margin: 20px auto 0;
+      text-decoration: none;
+      color: #0d6efd;
+      font-weight: 500;
+    }
+
+    .btn-admin:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="content">
+    <h2><i class="fa-solid fa-trophy text-warning"></i> Awareness Leaderboard</h2>
+
+    <!-- Top 5 Bar Chart -->
+    <div class="card p-4 mb-4">
+      <h5 class="mb-3"><i class="fa-solid fa-ranking-star text-primary"></i> Top 5 Performers</h5>
+      <div class="chart-container">
+        <canvas id="scoreChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Full Table -->
+    <div class="card p-4">
+      <h5 class="mb-3"><i class="fa-solid fa-users text-success"></i> All User Scores</h5>
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle text-center">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>User Email</th>
+              <th>Total Score</th>
+              <th>Level</th>
+            </tr>
+          </thead>
+          <tbody id="scoreTable">
+            <tr><td colspan="4" class="text-muted">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  <!-- JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const API_BASE = `${location.protocol}//${location.hostname}:5000`;
+
+    document.addEventListener("DOMContentLoaded", loadLeaderboard);
+
+    async function loadLeaderboard() {
+      try {
+        const res = await fetch(`${API_BASE}/api/scores`);
+        if (!res.ok) throw new Error("Backend returned status " + res.status);
+        const data = await res.json();
+        renderTable(data);
+        renderChart(data.slice(0, 5));
+      } catch (err) {
+        console.error("❌ Error loading scores:", err);
+        document.getElementById("scoreTable").innerHTML =
+          `<tr><td colspan="4" class="text-danger">Error loading leaderboard</td></tr>`;
+      }
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById("scoreTable");
+      tbody.innerHTML = "";
+      if (!data.length) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-muted">No scores yet</td></tr>`;
+        return;
+      }
+
+      data.sort((a, b) => b.totalScore - a.totalScore);
+      data.forEach((s, i) => {
+        const levelColor =
+          s.level === "Expert" ? "bg-success" :
+          s.level === "Intermediate" ? "bg-warning text-dark" :
+          "bg-secondary";
+
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>${i < 3 ? ["🥇","🥈","🥉"][i] : "#" + (i + 1)}</strong></td>
+            <td>${s.userId}</td>
+            <td>${s.totalScore}</td>
+            <td><span class="badge badge-level ${levelColor}">${s.level}</span></td>
+          </tr>`;
+      });
+    }
+
+    function renderChart(topScores) {
+      const ctx = document.getElementById("scoreChart").getContext("2d");
+      new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: topScores.map(s => s.userId.split("@")[0]),
+          datasets: [{
+            label: "Awareness Score",
+            data: topScores.map(s => s.totalScore),
+            backgroundColor: ["#0d6efd", "#198754", "#ffc107", "#6f42c1", "#dc3545"]
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, title: { display: true, text: 'Score' } },
+            x: { title: { display: true, text: 'User' } }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

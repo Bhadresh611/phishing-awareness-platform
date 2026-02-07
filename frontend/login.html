@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secure Account Verification</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #f4f6f9, #e3f2fd);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .login-card {
+      width: 400px;
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+      padding: 35px 30px;
+      text-align: center;
+      animation: fadeIn 0.5s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .login-card img {
+      width: 90px;
+      margin-bottom: 15px;
+    }
+    .form-control {
+      border-radius: 10px;
+      padding: 10px;
+    }
+    .btn-submit {
+      background: linear-gradient(135deg, #0d6efd, #6ea8fe);
+      border: none;
+      color: #fff;
+      border-radius: 8px;
+      padding: 10px;
+      width: 100%;
+      font-weight: 500;
+    }
+    .btn-submit:hover {
+      background: linear-gradient(135deg, #0a58ca, #4689f6);
+    }
+    .small-text {
+      font-size: 13px;
+      color: #777;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login-card">
+    <img src="Microsoft_logo_(2012).svg.png" alt="Microsoft Logo">
+    <h5 class="mb-3 fw-semibold">Account Verification Required</h5>
+    <p class="text-muted small-text mb-4">For security reasons, please re-enter your credentials to verify your account.</p>
+
+    <form id="loginForm">
+      <div class="mb-3 text-start">
+        <label class="form-label">Email address</label>
+        <input type="email" class="form-control" id="email" placeholder="you@example.com" required>
+      </div>
+      <div class="mb-3 text-start">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-control" id="password" placeholder="Enter your password" required>
+      </div>
+      <button type="submit" class="btn-submit">Verify Account</button>
+    </form>
+
+    <p class="small-text mt-3">This page is protected by Microsoft 365 Secure Access.</p>
+  </div>
+
+  <script>
+    // ✅ Define your backend base URL (5000 = backend server)
+    const API_BASE = `${location.protocol}//${location.hostname}:5000`;
+
+    // Extract URL parameters
+    const params = new URLSearchParams(window.location.search);
+    const campaignId = params.get('cid');
+    const userId = params.get('uid');
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      try {
+        // ✅ Record a "submitted" event to backend tracking
+        const res = await fetch(`${API_BASE}/track?cid=${campaignId}&uid=${encodeURIComponent(userId)}&event=submitted`);
+        
+        if (res.ok) {
+          // Redirect to awareness page (simulation result)
+          window.location.href = `${API_BASE}/awareness.html`;
+        } else {
+          alert("⚠️ Tracking failed. Try again later.");
+        }
+      } catch (err) {
+        console.error("❌ Error tracking submission:", err);
+        alert("Network issue. Try again.");
+      }
+    });
+  </script>
+</body>
+</html>

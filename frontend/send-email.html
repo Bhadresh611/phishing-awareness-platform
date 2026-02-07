@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Send Simulation Email</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    body { background-color: #f4f6f9; font-family: 'Segoe UI'; }
+    .sidebar { min-height: 100vh; width: 240px; background: linear-gradient(180deg,#1f1f2e,#343a40); color: white; position: fixed; padding: 20px; }
+    .sidebar a { color: #bbb; text-decoration: none; display: block; margin: 10px 0; }
+    .sidebar a:hover, .sidebar a.active { background: #0d6efd; color: white; padding-left: 10px; border-radius: 6px; transition: 0.3s; }
+    .content { margin-left: 260px; padding: 30px; }
+    .card { border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h3 class="text-center mb-4"><i class="fa-solid fa-shield-halved"></i> Admin</h3>
+    <a href="index.html"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+    <a href="campaign.html"><i class="fa-solid fa-envelope"></i> Campaigns</a>
+    <a href="report.html"><i class="fa-solid fa-chart-pie"></i> Reports</a>
+    <a href="send-email.html" class="active"><i class="fa-solid fa-paper-plane"></i> Send Simulation</a>
+  </div>
+
+  <div class="content">
+    <div class="card p-4">
+      <h4><i class="fa-solid fa-paper-plane text-primary"></i> Launch Phishing Simulation</h4>
+      <p class="text-muted">Send simulated phishing emails to test awareness.</p>
+
+      <form id="sendForm">
+        <div class="mb-3">
+          <label class="form-label">Select Campaign</label>
+          <select id="campaignSelect" class="form-select"></select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Recipient Emails (comma-separated)</label>
+          <textarea id="recipients" class="form-control" rows="3" placeholder="e.g. john@example.com, jane@company.com"></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Email Subject</label>
+          <input id="subject" class="form-control" placeholder="⚠️ Security Alert - Verify Your Account">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Message Template</label>
+          <textarea id="message" class="form-control" rows="5" placeholder="Write your phishing email message..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+          <i class="fa-solid fa-paper-plane"></i> Send Simulation
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', loadCampaigns);
+
+    async function loadCampaigns() {
+      const res = await fetch(`${API_BASE}/api/campaigns`);
+      const data = await res.json();
+      const select = document.getElementById('campaignSelect');
+      select.innerHTML = data.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
+    }
+
+    document.getElementById('sendForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const payload = {
+        campaignId: document.getElementById('campaignSelect').value,
+        recipients: document.getElementById('recipients').value.split(',').map(e => e.trim()).filter(Boolean),
+        subject: document.getElementById('subject').value,
+        message: document.getElementById('message').value
+      };
+
+      const res = await fetch(`${API_BASE}/api/send-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      alert(data.message || '✅ Simulation sent successfully!');
+      document.getElementById('sendForm').reset();
+    });
+  </script>
+</body>
+</html>
