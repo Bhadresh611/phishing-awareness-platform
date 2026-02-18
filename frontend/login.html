@@ -80,7 +80,7 @@
 
   <script>
     // ✅ Define your backend base URL (5000 = backend server)
-    const API_BASE = `${location.protocol}//${location.hostname}:5000`;
+    const API_BASE = ``;
 
     // Extract URL parameters
     const params = new URLSearchParams(window.location.search);
@@ -92,11 +92,11 @@
 
       try {
         // ✅ Record a "submitted" event to backend tracking
-        const res = await fetch(`${API_BASE}/track?cid=${campaignId}&uid=${encodeURIComponent(userId)}&event=submitted`);
+        const res = await fetch(`/track?cid=${campaignId}&uid=${encodeURIComponent(userId)}&event=submitted`);
         
         if (res.ok) {
           // Redirect to awareness page (simulation result)
-          window.location.href = `${API_BASE}/awareness.html`;
+          window.location.href = `/awareness.html`;
         } else {
           alert("⚠️ Tracking failed. Try again later.");
         }
