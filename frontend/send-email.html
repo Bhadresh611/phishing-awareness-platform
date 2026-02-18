@@ -63,7 +63,7 @@
     document.addEventListener('DOMContentLoaded', loadCampaigns);
 
     async function loadCampaigns() {
-      const res = await fetch(`${API_BASE}/api/campaigns`);
+      const res = await fetch(`/api/campaigns`);
       const data = await res.json();
       const select = document.getElementById('campaignSelect');
       select.innerHTML = data.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
@@ -79,7 +79,7 @@
         message: document.getElementById('message').value
       };
 
-      const res = await fetch(`${API_BASE}/api/send-email`, {
+      const res = await fetch(`/api/send-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
