@@ -76,7 +76,7 @@
   </div>
 
   <script>
-    const API_BASE = `${location.protocol}//${location.hostname}:5000`;
+    const API_BASE = ``;
 
     document.getElementById('loginBtn').addEventListener('click', async () => {
       const email = document.getElementById('adminEmail').value.trim();
@@ -91,7 +91,7 @@
 
       try {
         message.textContent = "Verifying credentials...";
-        const res = await fetch(`${API_BASE}/api/admin/login`, {
+        const res = await fetch(`/api/admin/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password })
