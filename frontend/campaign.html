@@ -490,7 +490,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
-      const API_BASE = `${location.protocol}//${location.hostname}:5000`;
+      const API_BASE = ``;
       
       // ✅ Login check (redirect if not logged in)
     document.addEventListener("DOMContentLoaded", () => {
@@ -567,7 +567,7 @@
           btn.addEventListener('click', async (e) => {
             const id = e.currentTarget.getAttribute('data-id');
             if (confirm('🗑️ Delete this campaign?')) {
-              const del = await fetch(`${API_BASE}/api/campaigns/${id}`, {
+              const del = await fetch(`/api/campaigns/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': 'Bearer ' + localStorage.getItem('adminToken') }
               });
@@ -640,7 +640,7 @@
 
         // Send to backend
         try {
-          const res = await fetch(`${API_BASE}/api/campaigns`, {
+          const res = await fetch(`/api/campaigns`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -673,7 +673,7 @@
       // --- Open edit modal and fill fields ---
       async function openEditModal(id) {
         try {
-          const res = await fetch(`${API_BASE}/api/campaigns/${id}`);
+          const res = await fetch(`/api/campaigns/${id}`);
           const campaign = await res.json();
 
           document.getElementById('editId').value = campaign._id;
@@ -704,7 +704,7 @@
         };
 
         try {
-          const res = await fetch(`${API_BASE}/api/campaigns/${id}`, {
+          const res = await fetch(`/api/campaigns/${id}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -729,7 +729,7 @@
       // === View Campaign Details ===
       async function openViewModal(id) {
         try {
-          const res = await fetch(`${API_BASE}/api/campaigns/${id}`);
+          const res = await fetch(`/api/campaigns/${id}`);
           const campaign = await res.json();
 
           // Fill modal fields
@@ -822,7 +822,7 @@
       // ✅ Hook into loadCampaigns to update chart after data fetch
       async function loadCampaigns() {
         try {
-          const res = await fetch(`${API_BASE}/api/campaigns`);
+          const res = await fetch(`/api/campaigns`);
           allCampaigns = await res.json();
           renderCampaigns(allCampaigns);
           updateStatusChart(allCampaigns); // 🎯 update chart here
@@ -840,7 +840,7 @@
       async function loadCampaignsDropdown() {
         const select = document.getElementById("campaignSelect");
         try {
-          const res = await fetch(`${API_BASE}/api/campaigns`);
+          const res = await fetch(`/api/campaigns`);
           const campaigns = await res.json();
 
           select.innerHTML = '<option value="">-- Select Campaign --</option>';
@@ -891,7 +891,7 @@
         try {
           for (const email of recipients) {
             const payload = { campaignId, recipients: [email] };
-            const res = await fetch(`${API_BASE}/api/send-email`, {
+            const res = await fetch(`/api/send-email`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
