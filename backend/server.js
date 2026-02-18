@@ -44,9 +44,13 @@ function verifyAdmin(req, res, next) {
 }
 
 // === DB Connect ===
-mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(()=>console.log('✅ MongoDB Connected'))
-  .catch(err=>console.error('❌ Mongo Error:', err));
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log("MongoDB connected"))
+.catch(err => console.error("Mongo Error:", err));
+
 
 // === Schemas ===
 const campaignSchema = new mongoose.Schema({
@@ -311,6 +315,11 @@ app.get('/api/tracking', verifyAdmin, async (req, res) => {
     res.status(500).json({ error: err.message});
   }
 
+});
+
+// Health check route (for Render)
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
 });
 
 // === Start Server ===
