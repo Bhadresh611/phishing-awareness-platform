@@ -150,7 +150,7 @@
   </div>
 
   <script>
-    const API_BASE = `${location.protocol}//${location.hostname}:5000`;
+    const API_BASE = ``;
     document.getElementById("quizForm").addEventListener("submit", function (e) {
       e.preventDefault();
 
@@ -181,7 +181,7 @@
 
       const urlParams = new URLSearchParams(window.location.search);
       const userId = urlParams.get('uid') || localStorage.getItem('quizUserId') || 'anonymous@company.com'; // or pull from URL/cookie
-      fetch(`${API_BASE}/api/scores`, {
+      fetch(`/api/scores`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, quizScore: score })
