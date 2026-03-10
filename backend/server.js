@@ -43,15 +43,6 @@ function verifyAdmin(req, res, next) {
   }
 }
 
-// === DB Connect ===
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log("MongoDB connected"))
-.catch(err => console.error("Mongo Error:", err));
-
-
 // === Schemas ===
 const campaignSchema = new mongoose.Schema({
   name: String,
@@ -322,7 +313,25 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-// === Start Server ===
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// === Start Server Only After Mongo Connects ===
+async function startServer() {
+  try {
+    console.log("MONGODB_URI exists:", !!MONGODB_URI);
+    console.log("MONGODB_URI starts with:", (MONGODB_URI || "").slice(0, 20));
+
+    await mongoose.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 10000
+    });
+
+    console.log("✅ MongoDB connected");
+
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`✅ Server running on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error("❌ Failed to connect MongoDB:", err.message);
+    process.exit(1);
+  }
+}
+
+startServer();
