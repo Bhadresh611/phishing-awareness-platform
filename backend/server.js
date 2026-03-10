@@ -317,8 +317,7 @@ app.get("/health", (req, res) => {
 async function startServer() {
   try {
     console.log("MONGODB_URI exists:", !!MONGODB_URI);
-    console.log("MONGODB_URI starts with:", (MONGODB_URI || "").slice(0, 20));
-
+    console.log("MONGODB_URI raw prefix:", JSON.stringify((MONGODB_URI || "").slice(0, 30)));
     await mongoose.connect(MONGODB_URI, {
       serverSelectionTimeoutMS: 10000
     });
