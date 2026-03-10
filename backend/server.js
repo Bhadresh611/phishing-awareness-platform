@@ -276,24 +276,35 @@ app.get('/track', async (req, res) => {
 
 // === Scores ===
 app.post('/api/scores', async (req, res) => {
-  const { userId, quizScore } = req.body;
-  if (!userId) return res.status(400).json({ error: "Missing userId" });
+  try {
+    const { userId, quizScore } = req.body;
+    if (!userId) return res.status(400).json({ error: "Missing userId" });
 
-  let scoreDoc = await AwarenessScore.findOne({ userId });
-  if (!scoreDoc) scoreDoc = new AwarenessScore({ userId });
+    let scoreDoc = await AwarenessScore.findOne({ userId });
+    if (!scoreDoc) scoreDoc = new AwarenessScore({ userId });
 
-  scoreDoc.totalScore += (quizScore || 0) * 5;
-  if (scoreDoc.totalScore >= 80) scoreDoc.level = "Expert";
-  else if (scoreDoc.totalScore >= 50) scoreDoc.level = "Intermediate";
-  else scoreDoc.level = "Beginner";
+    scoreDoc.totalScore += (quizScore || 0) * 5;
 
-  await scoreDoc.save();
-  res.json({ message: "✅ Quiz score updated", scoreDoc });
+    if (scoreDoc.totalScore >= 80) scoreDoc.level = "Expert";
+    else if (scoreDoc.totalScore >= 50) scoreDoc.level = "Intermediate";
+    else scoreDoc.level = "Beginner";
+
+    await scoreDoc.save();
+    res.json({ message: "✅ Quiz score updated", scoreDoc });
+  } catch (err) {
+    console.error("❌ Error updating score:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 app.get('/api/scores', async (req, res) => {
-  const scores = await AwarenessScore.find().sort({ totalScore: -1 });
-  res.json(scores);
+  try {
+    const scores = await AwarenessScore.find().sort({ totalScore: -1 });
+    res.json(scores);
+  } catch (err) {
+    console.error("❌ Error fetching scores:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 // === Tracking Logs for Reports ===
@@ -316,8 +327,6 @@ app.get("/health", (req, res) => {
 // === Start Server Only After Mongo Connects ===
 async function startServer() {
   try {
-    console.log("MONGODB_URI exists:", !!MONGODB_URI);
-    console.log("MONGODB_URI raw prefix:", JSON.stringify((MONGODB_URI || "").slice(0, 30)));
     await mongoose.connect(MONGODB_URI, {
       serverSelectionTimeoutMS: 10000
     });
